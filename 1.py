@@ -175,73 +175,10 @@ class BColours:
     UNDERLINE = '\033[4m'
 
 
-if int(Total) > 23517:
+if int(Total) > len(data):
     print("Total: " + str(Total))
     Colour = BColours.WARNING + BColours.BOLD + BColours.UNDERLINE
     print(Colour, "Error: Something has been duplicated")
     exit()
 else:
     print("Total: " + str(Total))
-while True:
-    print("NEW REPORT:")
-    year = str(input("Which year?"))
-    if "0" in year:
-        print()
-    if "1" in year:
-        print()
-    elif "2" in year:
-        print()
-    elif "3" in year:
-        print()
-    elif "4" in year:
-        print()
-    elif "5" in year:
-        print()
-    elif "6" in year:
-        print()
-    elif "7" in year:
-        print()
-    elif "8" in year:
-        print()
-    elif "9" in year:
-        print()
-    else:
-        print("That is not a year")
-        exit()
-    if len(year) > 4:
-        print("Invalid (That's not a year)")
-        exit()
-    sequence_no = "000"
-    AR = input("What access route?")
-    if AR == "Direct":
-        AR_no = str(input("Which round? (integers only) \n October = 1 \n April = 2"))
-    elif AR == "Programme":
-        AR_no = str(input("Which round? (integers only) \n October = 81 \n April = 82"))
-    elif AR == "Rapid":
-        AR_no = "0"
-    elif AR == "Commissioning":
-        AR_no = "30"
-    elif AR == "Calibration":
-        AR_no = "35"
-    elif AR == "Commercial":
-        AR_no = "5"
-    elif AR == "ICRD":
-        AR_no = "55"
-    elif AR == "Indian":
-        AR_no = "68"
-    elif AR == "Dutch":
-        AR_no = "69"
-    elif AR == "Riken":
-        AR_no = "7"
-    elif AR == "Xpress":
-        AR_no = "9"
-    else:
-        print("Invalid Access Route")
-        exit()
-
-    RB = (year[2:]) + AR_no + str(sequence_no)
-
-    file = open("data.txt", "a")
-    file.write("RB: " + RB + ", Access route: " + AR + "\n")
-    file.close()
-    print("*Ref no. recorded*")
