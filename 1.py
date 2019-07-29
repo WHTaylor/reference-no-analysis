@@ -49,7 +49,7 @@ def parse_access_route_value(access_route_value):
     raise ValueError("Improper Value: " + access_route_value)
 
 
-def get_digit_access_route(accessroute, round_value):
+def get_digit_access_route(access_route, round_value):
     simple_access_route_numbers = {
         AccessRoute.RAPID: "0",
         AccessRoute.COMMISSIONING: "30",
@@ -63,31 +63,41 @@ def get_digit_access_route(accessroute, round_value):
         AccessRoute.DIRECTORS: "39",
     }
 
-    if accessroute in simple_access_route_numbers.keys():
-        return simple_access_route_numbers[accessroute]
+    if access_route in simple_access_route_numbers.keys():
+        return simple_access_route_numbers[access_route]
     if not round_value:
         return None
     if "_1" in round_value:
-        if accessroute is AccessRoute.DIRECT:
+        if access_route is AccessRoute.DIRECT:
             return "1"
-        if accessroute is AccessRoute.PROGRAMME:
+        if access_route is AccessRoute.PROGRAMME:
             return "81"
     elif "_2" in round_value:
-        if accessroute is AccessRoute.DIRECT:
+        if access_route is AccessRoute.DIRECT:
             return "2"
-        if accessroute is AccessRoute.PROGRAMME:
+        if access_route is AccessRoute.PROGRAMME:
             return "82"
     return None
 
 
-def get_year_number(date_submitted):
-    epoch_value = entry["Date_Submitted"]
-    if epoch_value is None:
+def get_year_from_date_submitted(date_submitted):
+    if date_submitted is None:
         return None
-    epoch_value = epoch_value[6:-5]
-    year_value = time.strftime("%Y", time.localtime(float(epoch_value)))
-    year_value = year_value[-2:]
-    return year_value
+    epoch_value = date_submitted[6:-5]
+    return time.strftime("%Y", time.localtime(float(epoch_value)))
+
+
+def get_year_number(entry):
+    round_value = entry["Round"]
+    if round_value in ["RIKEN", "Commissioning"]:
+        year_value = get_year_from_date_submitted(entry["Date_Submitted"])
+    else:
+        year_value = entry["Year"]
+
+    if not year_value or year_value == "N/A":
+        return None
+    else:
+        return year_value[-2:]
 
 
 not_handling = []
@@ -96,55 +106,21 @@ failures = []
 
 with open("isis.json") as json_file:
     data = json.load(json_file)
-numbers = set()
+
 for entry in data:
-    accessroute = parse_access_route_value(entry["AccessRouteValue"])
-    number = get_digit_access_route(accessroute, entry["Round"])
+    access_route = parse_access_route_value(entry["AccessRouteValue"])
+    number = get_digit_access_route(access_route, entry["Round"])
 
     if number is None:
         not_handling.append(entry)
         continue
-    round_value = entry["Round"]
-
-    if round_value == "RIKEN" and accessroute == AccessRoute.DIRECT:
-        year_value = get_year_number(entry["Date_Submitted"])
-        if year_value is None:
-            not_handling.append(entry)
-            continue
-    else:
-        year_value = entry["Year"]
-        year_value = year_value[-2:]
-        if year_value == "N/A":
-            not_handling.append(entry)
-            continue
-
-    if round_value == "Commissioning":
-        year_value = get_year_number(entry["Date_Submitted"])
-        if year_value is None:
-            not_handling.append(entry)
-            continue
-    else:
-        year_value = entry["Year"]
-        year_value = year_value[-2:]
-        if year_value == "N/A":
-            not_handling.append(entry)
-            continue
-
-    if accessroute == AccessRoute.RIKEN:
-        year_value = get_year_number(entry["Date_Submitted"])
-        if year_value is None:
-            not_handling.append(entry)
-            continue
-    else:
-        year_value = entry["Year"]
-        year_value = year_value[-2:]
-        if year_value == "N/A":
-            not_handling.append(entry)
-            continue
-
-    RB_prefix = year_value + number
-    Real_number = entry["RB"]
-    if Real_number.startswith(RB_prefix):
+    year_number = get_year_number(entry)
+    if year_number is None:
+        not_handling.append(entry)
+        continue
+    rb_prefix = year_number + number
+    actual_rb = entry["RB"]
+    if actual_rb.startswith(rb_prefix):
         successes.append(entry)
     else:
         failures.append(entry)
