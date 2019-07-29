@@ -1,6 +1,7 @@
 import json
 import time
 from enum import Enum, auto
+from typing import Optional, Dict, List
 
 
 class AccessRoute(Enum):
@@ -50,7 +51,7 @@ simple_access_route_numbers = {
 }
 
 
-def parse_access_route_value(access_route_value: str):
+def parse_access_route_value(access_route_value: str) -> AccessRoute:
     if not access_route_value or access_route_value in ["Other Time", "Strategic programme", "Special DD"]:
         return AccessRoute.UNKNOWN
 
@@ -66,7 +67,7 @@ def parse_access_route_value(access_route_value: str):
     raise ValueError("Improper Value: " + access_route_value)
 
 
-def get_access_route_number(access_route: AccessRoute, round_value: str):
+def get_access_route_number(access_route: AccessRoute, round_value: str) -> Optional[str]:
     if access_route in simple_access_route_numbers.keys():
         return simple_access_route_numbers[access_route]
     if not round_value:
@@ -84,14 +85,14 @@ def get_access_route_number(access_route: AccessRoute, round_value: str):
     return None
 
 
-def get_year_from_date_submitted(date_submitted):
+def get_year_from_date_submitted(date_submitted: str) -> Optional[str]:
     if date_submitted is None:
         return None
     epoch_value = date_submitted[6:-5]
     return time.strftime("%Y", time.localtime(float(epoch_value)))
 
 
-def get_year_number(entry):
+def get_year_number(entry: Dict) -> Optional[str]:
     round_value = entry["Round"]
     if round_value in ["RIKEN", "Commissioning"]:
         year_value = get_year_from_date_submitted(entry["Date_Submitted"])
@@ -104,26 +105,28 @@ def get_year_number(entry):
         return year_value[-2:]
 
 
-not_handling = []
-successes = []
-failures = []
+not_handling: List[Dict] = []
+successes: List[Dict] = []
+failures: List[Dict] = []
 
 with open("isis.json") as json_file:
-    data = json.load(json_file)
+    data: List[Dict] = json.load(json_file)
 
 for entry in data:
-    access_route = parse_access_route_value(entry["AccessRouteValue"])
-    number = get_access_route_number(access_route, entry["Round"])
+    access_route: AccessRoute = parse_access_route_value(entry["AccessRouteValue"])
+    number: Optional[str] = get_access_route_number(access_route, entry["Round"])
 
     if number is None:
         not_handling.append(entry)
         continue
-    year_number = get_year_number(entry)
+
+    year_number: Optional[str] = get_year_number(entry)
     if year_number is None:
         not_handling.append(entry)
         continue
-    rb_prefix = year_number + number
-    actual_rb = entry["RB"]
+
+    rb_prefix: str = year_number + number
+    actual_rb: str = entry["RB"]
     if actual_rb.startswith(rb_prefix):
         successes.append(entry)
     else:
