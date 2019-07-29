@@ -105,13 +105,20 @@ def get_year_number(entry: Dict) -> Optional[str]:
         return year_value[-2:]
 
 
-not_handling: List[Dict] = []
-successes: List[Dict] = []
-failures: List[Dict] = []
-
-with open("isis.json") as json_file:
+file_name = "isis.json"
+print(f"Loading data from {file_name}")
+with open(file_name) as json_file:
     data: List[Dict] = json.load(json_file)
 
+print("Processing")
+outputs: Dict[str, List] = {
+    "not_handling": [],
+    "successes": [],
+    "failures": []
+}
+not_handling = outputs["not_handling"]
+successes = outputs["successes"]
+failures = outputs["failures"]
 for entry in data:
     access_route: AccessRoute = parse_access_route_value(entry["AccessRouteValue"])
     number: Optional[str] = get_access_route_number(access_route, entry["Round"])
@@ -132,36 +139,17 @@ for entry in data:
     else:
         failures.append(entry)
 
-with open("not_handling.json", "w") as json_file:
-    json.dump(not_handling, json_file)
+print("Writing results")
+for name, entries in outputs.items():
+    with open(f"{name}.json", "w") as json_file:
+        json.dump(entries, json_file)
 
-with open("successes.json", "w") as json_file:
-    json.dump(successes, json_file)
+print(f"Not handling: {len(not_handling)}")
+print(f"Successes: {len(successes)}")
+print(f"Failures: {len(failures)}")
+total = len(not_handling) + len(successes) + len(failures)
+print(f"Total: {total}")
+print()
 
-with open("failures.json", "w") as json_file:
-    json.dump(failures, json_file)
-
-print("Not handling: " + str(len(not_handling)))
-print("Successes: " + str(len(successes)))
-print("Failures: " + str(len(failures)))
-Total = (str(int(len(not_handling)) + int(len(successes)) + int(len(failures))))
-
-
-class BColours:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-
-
-if int(Total) > len(data):
-    print("Total: " + str(Total))
-    Colour = BColours.WARNING + BColours.BOLD + BColours.UNDERLINE
-    print(Colour, "Error: Something has been duplicated")
-    exit()
-else:
-    print("Total: " + str(Total))
+if total != len(data):
+    raise ValueError(f"Number of output entries ({total}) does not number input ({len(data)}")
