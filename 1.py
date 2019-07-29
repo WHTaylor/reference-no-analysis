@@ -19,50 +19,54 @@ class AccessRoute(Enum):
     UNKNOWN = auto()
 
 
-def parse_access_route_value(access_route_value):
+simple_access_route_mappings = {
+    "Calibration": AccessRoute.CALIBRATION,
+    "Commissioning": AccessRoute.COMMISSIONING,
+    "Dutch Access": AccessRoute.DUTCH,
+    "Riken Access": AccessRoute.RIKEN,
+    "Indian Access": AccessRoute.INDIAN,
+    "Industry Collaboration Research and Development": AccessRoute.ICRD,
+    "Commercial": AccessRoute.COMMERCIAL,
+    "QENS Express": AccessRoute.QENS
+}
+
+contained_access_route_mappings = {
+    "Programme": AccessRoute.PROGRAMME,
+    "Rapid": AccessRoute.RAPID,
+    "Director": AccessRoute.DIRECTORS
+}
+
+simple_access_route_numbers = {
+    AccessRoute.RAPID: "0",
+    AccessRoute.COMMISSIONING: "30",
+    AccessRoute.COMMERCIAL: "5",
+    AccessRoute.CALIBRATION: "35",
+    AccessRoute.ICRD: "55",
+    AccessRoute.INDIAN: "68",
+    AccessRoute.DUTCH: "69",
+    AccessRoute.RIKEN: "7",
+    AccessRoute.QENS: "95",
+    AccessRoute.DIRECTORS: "39",
+}
+
+
+def parse_access_route_value(access_route_value: str):
     if not access_route_value or access_route_value in ["Other Time", "Strategic programme", "Special DD"]:
         return AccessRoute.UNKNOWN
+
     if access_route_value.startswith("Direct Access"):
         return AccessRoute.DIRECT
-    if "Programme" in access_route_value:
-        return AccessRoute.PROGRAMME
-    if "Rapid" in access_route_value:
-        return AccessRoute.RAPID
-    if "Calibration" == access_route_value:
-        return AccessRoute.CALIBRATION
-    if "Commissioning" == access_route_value:
-        return AccessRoute.COMMISSIONING
-    if "Dutch Access" == access_route_value:
-        return AccessRoute.DUTCH
-    if "Riken Access" == access_route_value:
-        return AccessRoute.RIKEN
-    if "Indian Access" == access_route_value:
-        return AccessRoute.INDIAN
-    if "Directors" in access_route_value:
-        return AccessRoute.DIRECTORS
-    if "Industry Collaboration Research and Development" == access_route_value:
-        return AccessRoute.ICRD
-    if "Commercial" == access_route_value:
-        return AccessRoute.COMMERCIAL
-    if "QENS Express" == access_route_value:
-        return AccessRoute.QENS
+
+    for route_string, access_route in contained_access_route_mappings.items():
+        if route_string in access_route_value:
+            return access_route
+
+    if access_route_value in simple_access_route_mappings.keys():
+        return simple_access_route_mappings[access_route_value]
     raise ValueError("Improper Value: " + access_route_value)
 
 
-def get_digit_access_route(access_route, round_value):
-    simple_access_route_numbers = {
-        AccessRoute.RAPID: "0",
-        AccessRoute.COMMISSIONING: "30",
-        AccessRoute.COMMERCIAL: "5",
-        AccessRoute.CALIBRATION: "35",
-        AccessRoute.ICRD: "55",
-        AccessRoute.INDIAN: "68",
-        AccessRoute.DUTCH: "69",
-        AccessRoute.RIKEN: "7",
-        AccessRoute.QENS: "95",
-        AccessRoute.DIRECTORS: "39",
-    }
-
+def get_access_route_number(access_route: AccessRoute, round_value: str):
     if access_route in simple_access_route_numbers.keys():
         return simple_access_route_numbers[access_route]
     if not round_value:
@@ -109,7 +113,7 @@ with open("isis.json") as json_file:
 
 for entry in data:
     access_route = parse_access_route_value(entry["AccessRouteValue"])
-    number = get_digit_access_route(access_route, entry["Round"])
+    number = get_access_route_number(access_route, entry["Round"])
 
     if number is None:
         not_handling.append(entry)
