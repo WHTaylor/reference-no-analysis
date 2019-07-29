@@ -132,12 +132,13 @@ for entry in data:
         not_handling.append(entry)
         continue
 
+    year_number = year_number .lstrip('0')
     rb_prefix: str = year_number + number
     actual_rb: str = entry["RB"]
     if actual_rb.startswith(rb_prefix):
         successes.append(entry)
     else:
-        failures.append(entry)
+        failures.append((rb_prefix, entry))
 
 print("Writing results")
 for name, entries in outputs.items():
